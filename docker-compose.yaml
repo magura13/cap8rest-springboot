@@ -1,0 +1,31 @@
+version: "3.9"
+services:
+  oracle:
+    image: gvenzl/oracle-free:23-slim
+    environment:
+      ORACLE_PASSWORD: oracle123
+      APP_USER: rm557771
+      APP_USER_PASSWORD: 130792
+    ports: [ "1521:1521" ]
+    volumes:
+      - oradata:/opt/oracle/oradata
+    healthcheck:
+      test: ["CMD-SHELL", "echo 'select 1 from dual;' | sqlplus -s /nolog"]
+      interval: 15s
+      retries: 10
+
+  app:
+    build: .
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:oracle:thin:@//oracle.fiap.com.br:1521/ORCL
+      SPRING_DATASOURCE_USERNAME: rm557771
+      SPRING_DATASOURCE_PASSWORD: 130792
+      SPRING_JWT_SECRET: 7d9fc1e01a694d15abb61a1e3c4f28c7
+      SPRING_PROFILES_ACTIVE: docker
+    depends_on:
+      oracle:
+        condition: service_healthy
+    ports: [ "8080:8080" ]
+
+volumes:
+  oradata:
